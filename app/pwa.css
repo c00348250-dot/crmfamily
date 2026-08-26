@@ -1,0 +1,29 @@
+.pwa-install-slot { margin-top:auto; padding:12px 8px 10px; }
+.pwa-install-button { border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.08); color:white; border-radius:10px; padding:10px 12px; font-weight:750; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; transition:.15s ease; }
+.pwa-install-button:hover { background:rgba(255,255,255,.15); transform:translateY(-1px); }
+.pwa-install-button span:first-child { font-size:1rem; }
+.pwa-install-login { border-color:var(--border); background:#f7f9fc; color:var(--text); }
+.pwa-install-login:hover { background:#eef3f8; }
+
+.pwa-modal-backdrop { position:fixed; inset:0; z-index:9999; display:grid; place-items:center; padding:20px; background:rgba(8,18,30,.64); backdrop-filter:blur(6px); }
+.pwa-modal { width:min(430px,100%); position:relative; background:white; color:var(--text); border-radius:22px; padding:30px; box-shadow:0 30px 90px rgba(0,0,0,.28); }
+.pwa-modal h2 { margin:8px 0 8px; font-size:1.55rem; letter-spacing:-.03em; }
+.pwa-modal p { color:var(--muted); line-height:1.55; }
+.pwa-modal ol { padding-left:22px; line-height:1.8; margin:18px 0 22px; }
+.pwa-modal .primary { width:100%; }
+.pwa-modal-close { position:absolute; right:14px; top:12px; width:36px; height:36px; border:0; border-radius:10px; background:#eef2f6; color:var(--text); font-size:1.4rem; }
+.pwa-modal-icon { width:48px; height:48px; display:grid; place-items:center; border-radius:14px; background:var(--navy); color:white; font-size:1.35rem; font-weight:900; }
+
+.offline-shell { min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at top,#eff5fb 0,#f4f7fb 48%,#edf2f7 100%); }
+.offline-card { width:min(560px,100%); background:white; border:1px solid var(--border); border-radius:26px; padding:38px; text-align:center; box-shadow:var(--shadow); }
+.offline-mark { width:76px; height:76px; display:grid; place-items:center; margin:0 auto 20px; border-radius:22px; background:var(--navy); color:white; font-size:1.45rem; font-weight:900; letter-spacing:-.04em; }
+.offline-card h1 { margin:0 0 10px; font-size:clamp(1.8rem,5vw,2.7rem); letter-spacing:-.045em; }
+.offline-card p { margin:0 auto 24px; max-width:430px; color:var(--muted); line-height:1.65; }
+.offline-actions { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+.offline-actions a { min-width:150px; }
+
+@media (max-width:820px) {
+  .pwa-install-slot { margin-top:0; padding:4px 0 8px; }
+  .pwa-install-sidebar { width:auto; min-width:150px; }
+  .offline-card { padding:30px 22px; }
+}

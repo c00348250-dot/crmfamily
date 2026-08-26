@@ -1,0 +1,131 @@
+.stock-alert {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 16px 18px;
+  border: 1px solid #efcf96;
+  border-left: 5px solid var(--warning);
+  border-radius: 14px;
+  background: #fff8e9;
+  color: #6f4d15;
+}
+
+.stock-alert.critical {
+  border-color: #e8b8b8;
+  border-left-color: var(--danger);
+  background: #fff1f1;
+  color: #832f2f;
+}
+
+.dashboard-stock-alert {
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.dashboard-stock-alert:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(19, 36, 58, .08);
+}
+
+.stock-alert-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--warning);
+  color: white;
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+
+.stock-alert.critical .stock-alert-icon {
+  background: var(--danger);
+}
+
+.stock-alert-copy {
+  min-width: 0;
+}
+
+.stock-alert-copy strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: .98rem;
+}
+
+.stock-alert-copy p {
+  margin: 0;
+  font-size: .88rem;
+  line-height: 1.45;
+}
+
+.stock-alert-count {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(197, 121, 24, .13);
+  font-weight: 900;
+}
+
+.stock-alert.critical .stock-alert-count {
+  background: rgba(184, 59, 59, .12);
+}
+
+.low-stock-row td {
+  background: #fffaf0;
+}
+
+.low-stock-row td:first-child {
+  border-left: 4px solid var(--warning);
+}
+
+.low-stock-row.critical td {
+  background: #fff4f4;
+}
+
+.low-stock-row.critical td:first-child {
+  border-left-color: var(--danger);
+}
+
+.stock-row-note,
+.stock-minimum {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+.stock-row-note {
+  color: var(--warning);
+  font-weight: 750;
+}
+
+.low-stock-row.critical .stock-row-note {
+  color: var(--danger);
+}
+
+.stock-value-alert {
+  color: var(--warning);
+}
+
+.low-stock-row.critical .stock-value-alert {
+  color: var(--danger);
+}
+
+@media (max-width: 620px) {
+  .stock-alert {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    padding: 14px;
+  }
+
+  .stock-alert-count {
+    grid-column: 2;
+    width: max-content;
+    min-width: 34px;
+  }
+}

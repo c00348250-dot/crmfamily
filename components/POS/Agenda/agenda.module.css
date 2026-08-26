@@ -1,0 +1,236 @@
+.page {
+  display: grid;
+  gap: 18px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+  padding: 24px 26px;
+  border: 1px solid rgba(19,36,58,0.08);
+  border-radius: 22px;
+  background: white;
+  box-shadow: 0 16px 42px rgba(19,36,58,0.06);
+}
+
+.hero > div {
+  max-width: 760px;
+}
+
+.hero span {
+  color: var(--brand, #13243a);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.hero h1 {
+  margin: 5px 0 8px;
+  color: #172033;
+  font-size: clamp(28px, 4vw, 46px);
+  letter-spacing: -0.05em;
+}
+
+.hero p {
+  margin: 0;
+  color: #6f7b90;
+  line-height: 1.65;
+}
+
+.hero > a,
+.emptyState a {
+  flex: 0 0 auto;
+  padding: 11px 14px;
+  border-radius: 11px;
+  background: var(--brand, #13243a);
+  color: white;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.list {
+  display: grid;
+  gap: 9px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1.4fr) minmax(130px, .7fr) 120px 150px;
+  gap: 14px;
+  align-items: center;
+  padding: 15px 17px;
+  border: 1px solid #e1e6ee;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 9px 24px rgba(19,36,58,0.045);
+}
+
+.item.ready {
+  border-color: color-mix(in srgb, var(--brand, #13243a) 28%, #e1e6ee);
+  box-shadow: inset 4px 0 0 var(--brand, #13243a), 0 10px 26px rgba(19,36,58,0.055);
+}
+
+.timeBox,
+.statusBox,
+.priceBox {
+  display: grid;
+  gap: 3px;
+}
+
+.item small {
+  color: #8993a5;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.timeBox strong {
+  font-size: 20px;
+  color: #1c2940;
+}
+
+.mainCopy {
+  min-width: 0;
+}
+
+.mainCopy > span {
+  color: var(--brand, #13243a);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.mainCopy h2 {
+  margin: 2px 0 3px;
+  color: #172033;
+  font-size: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mainCopy p {
+  margin: 0;
+  color: #758096;
+  font-size: 12px;
+}
+
+.statusBox strong {
+  color: #435067;
+  font-size: 12px;
+}
+
+.priceBox strong {
+  color: #1c2940;
+  font-size: 17px;
+}
+
+.actionBox {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actionBox a {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 11px;
+  background: var(--brand, #13243a);
+  color: white;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.actionBox span {
+  color: #8792a5;
+  font-size: 11px;
+  text-align: right;
+}
+
+.empty,
+.emptyState {
+  padding: 36px 20px;
+  border: 1px dashed #d7dde6;
+  border-radius: 18px;
+  background: rgba(255,255,255,.72);
+  color: #758096;
+  text-align: center;
+}
+
+.emptyState {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 60px 20px;
+}
+
+.emptyState strong {
+  color: #2e3a50;
+  font-size: 22px;
+}
+
+.emptyState p {
+  max-width: 560px;
+  margin: 0 0 8px;
+  line-height: 1.6;
+}
+
+@media (max-width: 1050px) {
+  .item {
+    grid-template-columns: 90px minmax(0, 1fr) 120px 140px;
+  }
+
+  .statusBox {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .hero {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .item {
+    grid-template-columns: 72px minmax(0, 1fr) 100px;
+    gap: 10px;
+  }
+
+  .actionBox {
+    grid-column: 1 / -1;
+  }
+
+  .actionBox a {
+    width: 100%;
+  }
+
+  .priceBox {
+    text-align: right;
+  }
+}
+
+@media (max-width: 450px) {
+  .item {
+    grid-template-columns: 1fr 100px;
+  }
+
+  .timeBox {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .mainCopy {
+    grid-column: 1;
+  }
+
+  .priceBox {
+    grid-column: 2;
+  }
+}

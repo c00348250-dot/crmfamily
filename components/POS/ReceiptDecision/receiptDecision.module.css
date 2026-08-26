@@ -1,0 +1,133 @@
+.wrapper {
+  min-height: 100dvh;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(13, 22, 38, 0.68);
+  backdrop-filter: blur(8px);
+}
+
+.modal {
+  width: min(100%, 460px);
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 22px;
+  background: #ffffff;
+  color: #182239;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #1f7a55;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #e8f7ef;
+  color: #176847;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.modal h1 {
+  margin: 0;
+  font-size: clamp(22px, 4vw, 30px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.modal > p {
+  margin: 14px 0 0;
+  color: #667187;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.notice {
+  display: grid;
+  gap: 4px;
+  margin: 20px 0;
+  padding: 13px 14px;
+  border: 1px solid #ead8a6;
+  border-radius: 13px;
+  background: #fff8e6;
+  text-align: left;
+}
+
+.notice strong {
+  color: #79520f;
+  font-size: 12px;
+}
+
+.notice span {
+  color: #8c6a2d;
+  font-size: 11px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.actions button {
+  min-height: 50px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.printButton {
+  border: 0;
+  background: #17243a;
+  color: #ffffff;
+}
+
+.skipButton {
+  border: 1px solid #d9dfe7;
+  background: #f7f9fc;
+  color: #39465d;
+}
+
+.modal > small {
+  display: block;
+  margin-top: 16px;
+  color: #8a94a7;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  .modal {
+    padding: 22px 18px;
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .backdrop {
+    display: none !important;
+  }
+}

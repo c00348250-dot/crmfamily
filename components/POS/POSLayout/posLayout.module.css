@@ -1,0 +1,255 @@
+.shell {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 18% -10%, color-mix(in srgb, var(--brand, #13243a) 18%, transparent), transparent 34%),
+    #f5f7fb;
+  color: #172033;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(360px, 1.4fr) minmax(260px, 1fr);
+  gap: 24px;
+  align-items: center;
+  min-height: 88px;
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(19, 36, 58, 0.09);
+  background: rgba(250, 251, 253, 0.94);
+  backdrop-filter: blur(18px);
+}
+
+.brandBlock,
+.operator,
+.nav {
+  min-width: 0;
+}
+
+.brandBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandMark {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 14px;
+  background: var(--brand, #13243a);
+  color: white;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  box-shadow: 0 12px 28px rgba(19, 36, 58, 0.18);
+}
+
+.brandBlock div {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.brandBlock strong,
+.operator strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brandBlock small,
+.operator small,
+.nav small {
+  color: #758096;
+}
+
+.kicker {
+  color: var(--brand, #13243a);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid rgba(19, 36, 58, 0.08);
+  border-radius: 18px;
+  background: #eef1f6;
+}
+
+.nav a {
+  display: grid;
+  gap: 1px;
+  padding: 10px 14px;
+  border-radius: 13px;
+  color: #4d586d;
+  text-decoration: none;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.nav a:hover {
+  transform: translateY(-1px);
+}
+
+.nav a span {
+  font-weight: 800;
+}
+
+.nav a.active {
+  background: white;
+  color: #101827;
+  box-shadow: 0 7px 18px rgba(19, 36, 58, 0.08);
+}
+
+.operator {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.operator > div {
+  display: grid;
+  min-width: 0;
+  text-align: right;
+}
+
+.operator button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(19, 36, 58, 0.1);
+  border-radius: 12px;
+  background: white;
+  color: #39455a;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cashStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.cashStatus i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 4px currentColor;
+  opacity: 0.55;
+}
+
+.open {
+  background: #e6f8ef;
+  color: #137047;
+}
+
+.closed {
+  background: #fff0ed;
+  color: #a63b2d;
+}
+
+.content {
+  width: min(1600px, 100%);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.mobileNav {
+  display: none;
+}
+
+@media (max-width: 1080px) {
+  .header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 760px) {
+  .header {
+    min-height: auto;
+    padding: calc(12px + env(safe-area-inset-top)) 14px 12px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .operator > div,
+  .cashStatus {
+    display: none;
+  }
+
+  .operator button {
+    min-width: 56px;
+  }
+
+  .content {
+    padding: 14px 12px calc(86px + env(safe-area-inset-bottom));
+  }
+
+  .mobileNav {
+    position: fixed;
+    z-index: 50;
+    left: 12px;
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    padding: 6px;
+    border: 1px solid rgba(19, 36, 58, 0.1);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.96);
+    box-shadow: 0 18px 45px rgba(19,36,58,0.2);
+    backdrop-filter: blur(18px);
+  }
+
+  .mobileNav a {
+    padding: 11px 6px;
+    border-radius: 12px;
+    color: #677287;
+    text-align: center;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .mobileNav a.active {
+    background: var(--brand, #13243a);
+    color: white;
+  }
+}
+
+@media (max-width: 420px) {
+  .brandBlock small {
+    display: none;
+  }
+
+  .brandMark {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+}

@@ -1,0 +1,276 @@
+.wrapper {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.metrics article {
+  min-width: 0;
+  padding: 17px 18px;
+  border: 1px solid rgba(19, 36, 58, 0.08);
+  border-radius: 18px;
+  background: rgba(255,255,255,0.88);
+  box-shadow: 0 12px 35px rgba(19,36,58,0.06);
+}
+
+.metrics small,
+.metrics span {
+  display: block;
+  color: #778398;
+  font-size: 12px;
+}
+
+.metrics strong {
+  display: block;
+  margin: 4px 0 2px;
+  color: #172033;
+  font-size: clamp(20px, 2.1vw, 29px);
+  letter-spacing: -0.04em;
+}
+
+.metrics .expected {
+  background: #15243a;
+  color: white;
+}
+
+.metrics .expected small,
+.metrics .expected span {
+  color: #b7c2d4;
+}
+
+.metrics .expected strong {
+  color: white;
+}
+
+.operations {
+  border: 1px solid rgba(19,36,58,0.08);
+  border-radius: 16px;
+  background: white;
+  overflow: hidden;
+}
+
+.operations summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 18px;
+  cursor: pointer;
+  list-style: none;
+  color: #27344a;
+  font-weight: 900;
+}
+
+.operations summary::-webkit-details-marker {
+  display: none;
+}
+
+.operations summary span {
+  color: #7b879b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.operationGrid {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr;
+  gap: 12px;
+  padding: 0 14px 14px;
+}
+
+.operationGrid form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 15px;
+  border-radius: 14px;
+  background: #f6f8fb;
+}
+
+.operationGrid label,
+.openForm label {
+  display: grid;
+  gap: 6px;
+  color: #48556b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.operationGrid input,
+.operationGrid select,
+.openForm input,
+.openForm textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #dce2ea;
+  border-radius: 11px;
+  background: white;
+  color: #172033;
+  font: inherit;
+}
+
+.openForm textarea {
+  resize: vertical;
+}
+
+.wide,
+.formTitle,
+.operationGrid button {
+  grid-column: 1 / -1;
+}
+
+.formTitle {
+  display: grid;
+  gap: 2px;
+}
+
+.formTitle small {
+  color: #7d899d;
+}
+
+.operationGrid button,
+.openForm button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 11px;
+  background: #172a45;
+  color: white;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.operationGrid button:disabled,
+.openForm button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.operationGrid .closeButton {
+  background: #8e3128;
+}
+
+.closedPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 32px;
+  align-items: center;
+  min-height: 440px;
+  padding: clamp(26px, 6vw, 72px);
+  border-radius: 28px;
+  background:
+    linear-gradient(120deg, rgba(21,36,58,0.98), rgba(27,50,77,0.95)),
+    #15243a;
+  color: white;
+  box-shadow: 0 30px 80px rgba(19,36,58,0.18);
+}
+
+.closedCopy {
+  max-width: 680px;
+}
+
+.closedCopy h1 {
+  margin: 8px 0 14px;
+  font-size: clamp(34px, 5vw, 64px);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.closedCopy p {
+  max-width: 590px;
+  color: #c5cfdd;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.eyebrow {
+  color: #9eb3cf;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+}
+
+.openForm {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,0.11);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+}
+
+.openForm label {
+  color: #dce4ef;
+}
+
+.error,
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.error {
+  background: #fff0ed;
+  color: #96372c;
+}
+
+.notice {
+  background: #e8f8ef;
+  color: #176846;
+}
+
+@media (max-width: 980px) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .operationGrid,
+  .closedPanel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .metrics article {
+    padding: 14px;
+  }
+
+  .operations summary span {
+    display: none;
+  }
+
+  .operationGrid form {
+    grid-template-columns: 1fr;
+  }
+
+  .operationGrid label,
+  .formTitle,
+  .operationGrid button {
+    grid-column: auto;
+  }
+
+  .closedPanel {
+    min-height: auto;
+    padding: 28px 18px;
+    border-radius: 22px;
+  }
+
+  .closedCopy h1 {
+    font-size: 40px;
+  }
+}

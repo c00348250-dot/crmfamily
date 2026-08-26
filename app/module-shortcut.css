@@ -1,0 +1,6 @@
+.module-shortcut { margin:0 0 22px; border:1px solid var(--border); border-left:5px solid var(--gold); background:linear-gradient(90deg,var(--card),rgba(255,255,255,.75)); box-shadow:var(--shadow); border-radius:15px; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:18px; transition:.16s ease; }
+.module-shortcut:hover { transform:translateY(-1px); border-color:var(--gold); }
+.module-shortcut > div { display:grid; gap:4px; }
+.module-shortcut strong { font-size:1.05rem; }
+.module-shortcut p { margin:0; color:var(--muted); font-size:.88rem; }
+.module-shortcut > span { font-size:1.8rem; color:var(--gold); font-weight:800; }
