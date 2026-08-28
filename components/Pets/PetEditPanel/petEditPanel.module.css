@@ -1,0 +1,120 @@
+.details {
+  grid-column: 1 / -1;
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: .86rem;
+  font-weight: 800;
+  color: var(--navy);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #fff;
+  padding: 8px 11px;
+  user-select: none;
+}
+
+.summary::-webkit-details-marker { display: none; }
+.summary::before { content: "✎"; color: var(--gold); }
+
+.details[open] .summary {
+  background: color-mix(in srgb, var(--gold) 8%, white);
+  border-color: color-mix(in srgb, var(--gold) 28%, var(--border));
+}
+
+.content {
+  display: grid;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.form label {
+  display: grid;
+  gap: 6px;
+  font-size: .8rem;
+  font-weight: 700;
+  color: #4c5b6d;
+}
+
+.form textarea { min-height: 72px; }
+
+.wide { grid-column: 1 / -1; }
+
+.checkLabel {
+  display: flex !important;
+  align-items: center;
+  gap: 9px !important;
+  min-height: 44px;
+}
+
+.checkLabel input { width: auto; margin: 0; }
+
+.actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+.actions span {
+  max-width: 560px;
+  color: var(--muted);
+  font-size: .77rem;
+  line-height: 1.45;
+}
+
+.archiveBox {
+  border: 1px solid #efcece;
+  background: #fffafa;
+  border-radius: 12px;
+  padding: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.archiveBox strong { color: var(--danger); font-size: .86rem; }
+.archiveBox p { margin: 4px 0 0; color: var(--muted); font-size: .76rem; line-height: 1.4; }
+
+.archiveForm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.archiveForm label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: .76rem;
+  color: #7a4a4a;
+}
+
+.archiveForm input { width: auto; margin: 0; }
+
+@media (max-width: 820px) {
+  .form { grid-template-columns: 1fr; }
+  .wide { grid-column: auto; }
+  .actions, .archiveBox { align-items: stretch; flex-direction: column; }
+  .actions button { width: 100%; }
+  .archiveForm { justify-content: flex-start; }
+  .archiveForm button { width: 100%; }
+}

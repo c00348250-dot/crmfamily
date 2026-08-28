@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { PetEditPanel } from "@/components/Pets/PetEditPanel/petEditPanel";
 import { requireStoreUser } from "@/lib/auth";
 import { getCompanyBrand } from "@/lib/company-brand";
 import { brl, dateBR } from "@/lib/format";
@@ -96,9 +97,49 @@ export default async function PetsPage() {
       {!appointments?.length ? <tr><td colSpan={8} className="empty">Nenhum agendamento cadastrado.</td></tr> : null}
     </tbody></table></div></section>
 
-    <section className="panel section-gap"><div className="panel-head"><h2>Pets cadastrados</h2><span className="badge">{pets?.length ?? 0}</span></div><div className="pet-grid panel-body">
-      {pets?.map((p) => <article className="pet-card" key={p.id}>{p.photo_url ? <img src={p.photo_url} alt={p.name} /> : <div className="pet-avatar">{p.name.slice(0,1).toUpperCase()}</div>}<div><span className="eyebrow">{p.species}</span><h3>{p.name}</h3><p>{p.breed ?? "Sem raça informada"} • {p.weight ? `${p.weight} kg` : "peso não informado"}</p><p><strong>Tutor:</strong> {relationOne(p.customers)?.name ?? "—"}</p>{p.allergies ? <p className="pet-warning"><strong>Alergias:</strong> {p.allergies}</p> : null}{p.behavior_notes ? <p><strong>Comportamento:</strong> {p.behavior_notes}</p> : null}{p.medications ? <p><strong>Medicamentos:</strong> {p.medications}</p> : null}{p.birth_date ? <small>Nascimento: {dateBR(p.birth_date)}</small> : null}</div></article>)}
-      {!pets?.length ? <p className="empty">Nenhum pet cadastrado.</p> : null}
-    </div></section>
+    <section className="panel section-gap">
+      <div className="panel-head"><h2>Pets cadastrados</h2><span className="badge">{pets?.length ?? 0}</span></div>
+      <div className="pet-grid panel-body">
+        {pets?.map((p) => {
+          const tutor = relationOne(p.customers);
+          return (
+            <article className="pet-card" key={p.id}>
+              {p.photo_url ? <img src={p.photo_url} alt={p.name} /> : <div className="pet-avatar">{p.name.slice(0,1).toUpperCase()}</div>}
+              <div>
+                <span className="eyebrow">{p.species}</span>
+                <h3>{p.name}</h3>
+                <p>{p.breed ?? "Sem raça informada"} • {p.weight ? `${p.weight} kg` : "peso não informado"}</p>
+                <p><strong>Tutor:</strong> {tutor?.name ?? "—"}</p>
+                {p.allergies ? <p className="pet-warning"><strong>Alergias:</strong> {p.allergies}</p> : null}
+                {p.behavior_notes ? <p><strong>Comportamento:</strong> {p.behavior_notes}</p> : null}
+                {p.medications ? <p><strong>Medicamentos:</strong> {p.medications}</p> : null}
+                {p.birth_date ? <small>Nascimento: {dateBR(p.birth_date)}</small> : null}
+              </div>
+
+              <PetEditPanel
+                pet={{
+                  id: p.id,
+                  customerId: tutor?.id ?? "",
+                  name: p.name,
+                  species: p.species,
+                  breed: p.breed,
+                  sex: p.sex,
+                  birthDate: p.birth_date,
+                  weight: p.weight,
+                  neutered: p.neutered,
+                  allergies: p.allergies,
+                  behaviorNotes: p.behavior_notes,
+                  medications: p.medications,
+                  photoUrl: p.photo_url,
+                  notes: p.notes,
+                }}
+                customers={(customers ?? []).map((customer) => ({ id: customer.id, name: customer.name, phone: customer.phone }))}
+              />
+            </article>
+          );
+        })}
+        {!pets?.length ? <p className="empty">Nenhum pet cadastrado.</p> : null}
+      </div>
+    </section>
   </>;
 }
