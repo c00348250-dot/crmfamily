@@ -1,4 +1,4 @@
-import { archivePet, updatePet } from "@/lib/pet-actions";
+import { archivePet, reactivatePet, updatePet } from "@/lib/pet-actions";
 import styles from "./petEditPanel.module.css";
 
 type CustomerOption = {
@@ -22,9 +22,25 @@ type PetData = {
   medications?: string | null;
   photoUrl?: string | null;
   notes?: string | null;
+  isActive: boolean;
 };
 
 export function PetEditPanel({ pet, customers }: { pet: PetData; customers: CustomerOption[] }) {
+  if (!pet.isActive) {
+    return (
+      <div className={styles.reactivateBox}>
+        <div>
+          <strong>Pet arquivado</strong>
+          <p>O pet está fora das operações ativas. Reative para voltar a editar e agendar novos atendimentos.</p>
+        </div>
+        <form action={reactivatePet} className={styles.archiveForm}>
+          <input type="hidden" name="id" value={pet.id} />
+          <button className="secondary" type="submit">Reativar pet</button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <details className={styles.details}>
       <summary className={styles.summary}>Editar pet</summary>

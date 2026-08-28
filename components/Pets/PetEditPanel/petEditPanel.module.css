@@ -78,7 +78,8 @@
   line-height: 1.45;
 }
 
-.archiveBox {
+.archiveBox,
+.reactivateBox {
   border: 1px solid #efcece;
   background: #fffafa;
   border-radius: 12px;
@@ -89,8 +90,17 @@
   gap: 16px;
 }
 
+.reactivateBox {
+  grid-column: 1 / -1;
+  margin-top: 12px;
+  border-color: color-mix(in srgb, var(--gold) 30%, var(--border));
+  background: color-mix(in srgb, var(--gold) 7%, white);
+}
+
 .archiveBox strong { color: var(--danger); font-size: .86rem; }
-.archiveBox p { margin: 4px 0 0; color: var(--muted); font-size: .76rem; line-height: 1.4; }
+.reactivateBox strong { color: var(--navy); font-size: .86rem; }
+.archiveBox p,
+.reactivateBox p { margin: 4px 0 0; color: var(--muted); font-size: .76rem; line-height: 1.4; }
 
 .archiveForm {
   display: flex;
@@ -113,7 +123,7 @@
 @media (max-width: 820px) {
   .form { grid-template-columns: 1fr; }
   .wide { grid-column: auto; }
-  .actions, .archiveBox { align-items: stretch; flex-direction: column; }
+  .actions, .archiveBox, .reactivateBox { align-items: stretch; flex-direction: column; }
   .actions button { width: 100%; }
   .archiveForm { justify-content: flex-start; }
   .archiveForm button { width: 100%; }

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { AppointmentEditPanel } from "@/components/Pets/AppointmentEditPanel/appointmentEditPanel";
 import { PetEditPanel } from "@/components/Pets/PetEditPanel/petEditPanel";
+import { PetStatusFilter } from "@/components/Pets/PetStatusFilter/petStatusFilter";
 import { requireStoreUser } from "@/lib/auth";
 import { getCompanyBrand } from "@/lib/company-brand";
 import { brl, dateBR } from "@/lib/format";
@@ -32,7 +34,17 @@ function saoPauloDateKey(value = new Date()) {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
-export default async function PetsPage() {
+type PetFilter = "ativos" | "arquivados" | "todos";
+
+export default async function PetsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ pets?: string }>;
+}) {
+  const params = await searchParams;
+  const petFilter: PetFilter =
+    params.pets === "arquivados" ? "arquivados" : params.pets === "todos" ? "todos" : "ativos";
+
   const auth = await requireStoreUser();
   const supabase = await createClient();
   const { data: company } = await supabase.from("companies").select("name,slug").eq("id", auth.companyId!).single();
@@ -42,9 +54,19 @@ export default async function PetsPage() {
 
   const [{ data: customers }, { data: pets }, { data: appointments }] = await Promise.all([
     supabase.from("customers").select("id,name,phone").eq("is_active", true).order("name"),
-    supabase.from("pets").select("id,name,species,breed,sex,birth_date,weight,neutered,allergies,behavior_notes,medications,photo_url,notes,customers(id,name,phone)").eq("is_active", true).order("name"),
-    supabase.from("pet_appointments").select("id,service_type,scheduled_at,status,price,responsible,service_notes,pets(name,species),customers(name,phone)").order("scheduled_at", { ascending: true }).limit(200),
+    supabase.from("pets").select("id,name,species,breed,sex,birth_date,weight,neutered,allergies,behavior_notes,medications,photo_url,notes,is_active,customers(id,name,phone)").order("name"),
+    supabase.from("pet_appointments").select("id,pet_id,service_type,scheduled_at,status,price,responsible,service_notes,pets(name,species),customers(name,phone)").order("scheduled_at", { ascending: true }).limit(200),
   ]);
+
+  const activePets = pets?.filter((pet) => pet.is_active) ?? [];
+  const archivedPets = pets?.filter((pet) => !pet.is_active) ?? [];
+  const visiblePets = petFilter === "arquivados" ? archivedPets : petFilter === "todos" ? (pets ?? []) : activePets;
+  const appointmentPets = (pets ?? []).map((pet) => ({
+    id: pet.id,
+    name: pet.name,
+    tutorName: relationOne(pet.customers)?.name,
+    isActive: pet.is_active,
+  }));
 
   const today = (appointments ?? []).filter((a) => saoPauloDateKey(new Date(a.scheduled_at)) === todayKey && a.status !== "cancelled");
   const active = (appointments ?? []).filter((a) => !["delivered","cancelled"].includes(a.status));
@@ -53,7 +75,7 @@ export default async function PetsPage() {
     <PageHeader eyebrow="HOUSE PET" title="Pets e agenda" description="Cadastro dos animais, histórico de cuidados e agenda de banho, tosa e atendimentos." />
 
     <div className="stat-grid">
-      <div className="stat-card"><span>Pets ativos</span><strong>{pets?.length ?? 0}</strong><small>Animais cadastrados</small></div>
+      <div className="stat-card"><span>Pets ativos</span><strong>{activePets.length}</strong><small>Animais cadastrados</small></div>
       <div className="stat-card success"><span>Agenda de hoje</span><strong>{today.length}</strong><small>Atendimentos do dia</small></div>
       <div className="stat-card warning"><span>Em andamento</span><strong>{active.length}</strong><small>Agendados até entrega</small></div>
       <div className="stat-card"><span>Valor agendado</span><strong>{brl(today.reduce((a,r) => a + Number(r.price ?? 0), 0))}</strong><small>Hoje</small></div>
@@ -81,7 +103,7 @@ export default async function PetsPage() {
 
       <section className="panel"><div className="panel-head"><h2>Novo agendamento</h2></div><div className="panel-body">
         <form action={createPetAppointment} className="form-grid">
-          <label className="wide">Pet<select name="pet_id" required><option value="">Selecione...</option>{pets?.map((p) => <option key={p.id} value={p.id}>{p.name} — {relationOne(p.customers)?.name ?? "Sem tutor"}</option>)}</select></label>
+          <label className="wide">Pet<select name="pet_id" required><option value="">Selecione...</option>{activePets.map((p) => <option key={p.id} value={p.id}>{p.name} — {relationOne(p.customers)?.name ?? "Sem tutor"}</option>)}</select></label>
           <label>Serviço<select name="service_type" required><option>Banho</option><option>Banho + tosa</option><option>Tosa</option><option>Higiene</option><option>Outro</option></select></label>
           <label>Data e hora<input name="scheduled_at" type="datetime-local" required /></label>
           <label>Valor (R$)<input name="price" type="number" min="0" step="0.01" defaultValue="0" /></label>
@@ -93,21 +115,21 @@ export default async function PetsPage() {
     </div>
 
     <section className="panel section-gap"><div className="panel-head"><h2>Agenda</h2><span className="badge">{appointments?.length ?? 0}</span></div><div className="table-wrap"><table><thead><tr><th>Data</th><th>Pet</th><th>Tutor</th><th>Serviço</th><th>Responsável</th><th>Valor</th><th>Status</th><th>Atualizar</th></tr></thead><tbody>
-      {appointments?.map((a) => <tr key={a.id} className={a.status === "ready" ? "highlight-row" : ""}><td><strong>{dateTimeBR(a.scheduled_at)}</strong></td><td>{relationOne(a.pets)?.name ?? "—"}</td><td>{relationOne(a.customers)?.name ?? "—"}</td><td>{a.service_type}</td><td>{a.responsible ?? "—"}</td><td className="amount">{brl(a.price)}</td><td><span className={`badge ${a.status === "delivered" ? "success" : a.status === "cancelled" ? "danger" : "warning"}`}>{statusLabel[a.status] ?? a.status}</span></td><td><form action={updatePetAppointmentStatus} className="inline-form"><input type="hidden" name="id" value={a.id}/><select name="status" defaultValue={a.status}>{Object.entries(statusLabel).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select><button className="secondary">Salvar</button></form></td></tr>)}
+      {appointments?.map((a) => <tr key={a.id} className={a.status === "ready" ? "highlight-row" : ""}><td><strong>{dateTimeBR(a.scheduled_at)}</strong></td><td>{relationOne(a.pets)?.name ?? "—"}</td><td>{relationOne(a.customers)?.name ?? "—"}</td><td>{a.service_type}</td><td>{a.responsible ?? "—"}</td><td className="amount">{brl(a.price)}</td><td><span className={`badge ${a.status === "delivered" ? "success" : a.status === "cancelled" ? "danger" : "warning"}`}>{statusLabel[a.status] ?? a.status}</span></td><td><div className="appointment-actions"><AppointmentEditPanel appointment={{ id: a.id, petId: a.pet_id, serviceType: a.service_type, scheduledAt: a.scheduled_at, status: a.status, price: a.price, responsible: a.responsible, serviceNotes: a.service_notes }} pets={appointmentPets} /><form action={updatePetAppointmentStatus} className="inline-form"><input type="hidden" name="id" value={a.id}/><select name="status" defaultValue={a.status}>{Object.entries(statusLabel).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select><button className="secondary">Salvar status</button></form></div></td></tr>)}
       {!appointments?.length ? <tr><td colSpan={8} className="empty">Nenhum agendamento cadastrado.</td></tr> : null}
     </tbody></table></div></section>
 
     <section className="panel section-gap">
-      <div className="panel-head"><h2>Pets cadastrados</h2><span className="badge">{pets?.length ?? 0}</span></div>
+      <div className="panel-head"><h2>Pets cadastrados</h2><PetStatusFilter currentFilter={petFilter} activeCount={activePets.length} archivedCount={archivedPets.length} totalCount={pets?.length ?? 0} /></div>
       <div className="pet-grid panel-body">
-        {pets?.map((p) => {
+        {visiblePets.map((p) => {
           const tutor = relationOne(p.customers);
           return (
-            <article className="pet-card" key={p.id}>
+            <article className={`pet-card ${!p.is_active ? "archived" : ""}`} key={p.id}>
               {p.photo_url ? <img src={p.photo_url} alt={p.name} /> : <div className="pet-avatar">{p.name.slice(0,1).toUpperCase()}</div>}
               <div>
                 <span className="eyebrow">{p.species}</span>
-                <h3>{p.name}</h3>
+                <h3>{p.name}{!p.is_active ? <span className="badge warning">Arquivado</span> : null}</h3>
                 <p>{p.breed ?? "Sem raça informada"} • {p.weight ? `${p.weight} kg` : "peso não informado"}</p>
                 <p><strong>Tutor:</strong> {tutor?.name ?? "—"}</p>
                 {p.allergies ? <p className="pet-warning"><strong>Alergias:</strong> {p.allergies}</p> : null}
@@ -132,13 +154,14 @@ export default async function PetsPage() {
                   medications: p.medications,
                   photoUrl: p.photo_url,
                   notes: p.notes,
+                  isActive: p.is_active,
                 }}
                 customers={(customers ?? []).map((customer) => ({ id: customer.id, name: customer.name, phone: customer.phone }))}
               />
             </article>
           );
         })}
-        {!pets?.length ? <p className="empty">Nenhum pet cadastrado.</p> : null}
+        {!visiblePets.length ? <p className="empty">Nenhum pet encontrado para este filtro.</p> : null}
       </div>
     </section>
   </>;
