@@ -131,3 +131,46 @@ export async function archivePet(formData: FormData) {
 
   revalidatePetViews();
 }
+
+export async function reactivatePet(formData: FormData) {
+  const auth = await requireStoreUser();
+  const companyId = auth.companyId;
+  if (!companyId) throw new Error("Empresa não identificada.");
+
+  const id = text(formData, "id");
+  if (!id) throw new Error("Pet não identificado.");
+
+  const supabase = await createClient();
+  const { data: existingPet, error: findError } = await supabase
+    .from("pets")
+    .select("id,name,is_active")
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (findError) throw new Error(findError.message);
+  if (!existingPet) throw new Error("Pet não encontrado.");
+
+  const { data: pet, error } = await supabase
+    .from("pets")
+    .update({ is_active: true })
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .eq("is_active", false)
+    .select("id,name")
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!pet) throw new Error("Pet não encontrado ou já ativo.");
+
+  await supabase.from("audit_logs").insert({
+    company_id: companyId,
+    user_id: auth.id,
+    action: "reactivate",
+    entity_type: "pet",
+    entity_id: id,
+    details: { name: pet.name },
+  });
+
+  revalidatePetViews();
+}

@@ -135,6 +135,80 @@ export async function createPetAppointment(formData: FormData) {
   revalidatePath("/dashboard/alertas");
 }
 
+export async function updatePetAppointment(formData: FormData) {
+  const auth = await requireStoreUser();
+  const companyId = auth.companyId;
+  if (!companyId) throw new Error("Empresa não identificada.");
+
+  const supabase = await createClient();
+  const id = text(formData, "id");
+  if (!id) throw new Error("Agendamento não identificado.");
+
+  const { data: appointment, error: appointmentError } = await supabase
+    .from("pet_appointments")
+    .select("id,status,company_id,pet_id")
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (appointmentError) throw new Error(appointmentError.message);
+  if (!appointment) throw new Error("Agendamento não encontrado.");
+  if (["delivered", "cancelled"].includes(appointment.status)) throw new Error("Agendamento finalizado não pode ser editado.");
+
+  const petId = text(formData, "pet_id");
+  if (!petId) throw new Error("Selecione o pet do agendamento.");
+
+  const { data: pet, error: petError } = await supabase
+    .from("pets")
+    .select("id,customer_id,is_active")
+    .eq("id", petId)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (petError) throw new Error(petError.message);
+  if (!pet?.customer_id) throw new Error("Pet não encontrado nesta empresa.");
+  if (!pet.is_active && pet.id !== appointment.pet_id) throw new Error("Selecione um pet ativo para o agendamento.");
+
+  const serviceType = text(formData, "service_type");
+  if (!serviceType) throw new Error("Informe o tipo de serviço.");
+
+  const scheduled = text(formData, "scheduled_at");
+  if (!scheduled) throw new Error("Informe a data e hora do agendamento.");
+  const scheduledAt = new Date(`${scheduled}:00-03:00`).toISOString();
+
+  const price = numberValue(formData, "price");
+  if (price < 0) throw new Error("Valor do atendimento não pode ser negativo.");
+
+  const payload = {
+    pet_id: petId,
+    customer_id: pet.customer_id,
+    service_type: serviceType,
+    scheduled_at: scheduledAt,
+    price,
+    responsible: optional(formData, "responsible"),
+    service_notes: optional(formData, "service_notes"),
+  };
+
+  const { error } = await supabase
+    .from("pet_appointments")
+    .update(payload)
+    .eq("id", id)
+    .eq("company_id", companyId);
+
+  if (error) throw new Error(error.message);
+
+  await audit(supabase, companyId, auth.id, "update", "pet_appointment", id, {
+    pet_id: petId,
+    service_type: serviceType,
+    scheduled_at: scheduledAt,
+    price,
+    responsible: payload.responsible,
+  });
+
+  revalidatePath("/dashboard/pets");
+  revalidatePath("/dashboard/alertas");
+}
+
 export async function updatePetAppointmentStatus(formData: FormData) {
   const auth = await requireStoreUser();
   const supabase = await createClient();
