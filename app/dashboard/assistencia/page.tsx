@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { SafeActionForm } from "@/components/safe-action-form";
 import { requireStoreUser } from "@/lib/auth";
 import { getCompanyBrand } from "@/lib/company-brand";
 import { brl, dateBR } from "@/lib/format";
@@ -53,7 +54,7 @@ export default async function AssistancePage() {
 
     <div className="grid-2">
       <section className="panel"><div className="panel-head"><h2>Nova ordem de serviço</h2></div><div className="panel-body">
-        <form action={createServiceOrder} className="form-grid">
+        <SafeActionForm action={createServiceOrder} className="form-grid" successMessage="Ordem de serviço aberta com sucesso.">
           <label className="wide">Cliente<select name="customer_id"><option value="">Não identificado</option>{customers?.map((c) => <option key={c.id} value={c.id}>{c.name}{c.phone ? ` — ${c.phone}` : ""}</option>)}</select></label>
           <label>Marca<input name="device_brand" required placeholder="Samsung, Apple..." /></label>
           <label>Modelo<input name="device_model" required placeholder="Galaxy A54, iPhone 13..." /></label>
@@ -71,12 +72,12 @@ export default async function AssistancePage() {
           <label>Previsão de entrega<input name="estimated_delivery" type="date" /></label>
           <label className="wide">Observações<textarea name="notes" /></label>
           <div className="form-actions"><button className="primary">Abrir ordem de serviço</button></div>
-        </form>
+        </SafeActionForm>
         <p className="callout section-gap">Por segurança, o CRM não armazena senha de desbloqueio do aparelho em texto aberto. A garantia começa a contar quando a OS é marcada como entregue.</p>
       </div></section>
 
       <section className="panel"><div className="panel-head"><h2>Controle de aparelhos / IMEI</h2></div><div className="panel-body">
-        <form action={createDeviceUnit} className="form-grid">
+        <SafeActionForm action={createDeviceUnit} className="form-grid" successMessage="Aparelho cadastrado com sucesso.">
           <label className="wide">Produto relacionado<select name="product_id"><option value="">Sem vínculo</option>{products?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
           <label>Marca<input name="brand" required /></label>
           <label>Modelo<input name="model" required /></label>
@@ -87,7 +88,7 @@ export default async function AssistancePage() {
           <label>Custo (R$)<input name="purchase_cost" type="number" min="0" step="0.01" defaultValue="0" /></label>
           <label>Venda (R$)<input name="sale_price" type="number" min="0" step="0.01" defaultValue="0" /></label>
           <div className="form-actions"><button className="secondary">Cadastrar aparelho</button></div>
-        </form>
+        </SafeActionForm>
       </div></section>
     </div>
 

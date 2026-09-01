@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/page-header";
+import { SafeActionForm } from "@/components/safe-action-form";
 import { SchemmerProductForm } from "@/components/SchemmerProductForm/schemmerProductForm";
 import { adjustStock, archiveProduct, createProduct } from "@/lib/actions";
 import { adjustSchemmerVariantStock } from "@/lib/schemmer-product-actions";
@@ -57,7 +58,7 @@ export default async function ProductsPage() {
     <div className="grid-2">
       <section className="panel"><div className="panel-head"><h2>Novo produto</h2>{isSchemmer ? <span className="badge success">variações disponíveis</span> : null}</div><div className="panel-body">
         {isSchemmer ? <SchemmerProductForm /> : (
-          <form action={createProduct} className="form-grid">
+          <SafeActionForm action={createProduct} className="form-grid" successMessage="Produto cadastrado com sucesso.">
             <label>SKU<input name="sku" required placeholder="Ex.: CEL-001" /></label>
             <label>Código de barras<input name="barcode" placeholder="Opcional" /></label>
             <label className="wide">Nome<input name="name" required /></label>
@@ -68,7 +69,7 @@ export default async function ProductsPage() {
             <label>Preço de venda (R$)<input name="price" type="number" step="0.01" min="0" required /></label>
             <label className="wide">Descrição<textarea name="description" /></label>
             <div className="form-actions"><button className="primary">Cadastrar produto</button></div>
-          </form>
+          </SafeActionForm>
         )}
       </div></section>
 

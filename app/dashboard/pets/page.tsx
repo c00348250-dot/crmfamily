@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
+import { SafeActionForm } from "@/components/safe-action-form";
 import { AppointmentEditPanel } from "@/components/Pets/AppointmentEditPanel/appointmentEditPanel";
 import { PetEditPanel } from "@/components/Pets/PetEditPanel/petEditPanel";
 import { PetStatusFilter } from "@/components/Pets/PetStatusFilter/petStatusFilter";
@@ -83,7 +84,7 @@ export default async function PetsPage({
 
     <div className="grid-2">
       <section className="panel"><div className="panel-head"><h2>Cadastrar pet</h2></div><div className="panel-body">
-        <form action={createPet} className="form-grid">
+        <SafeActionForm action={createPet} className="form-grid" successMessage="Pet cadastrado com sucesso.">
           <label className="wide">Tutor / cliente<select name="customer_id" required><option value="">Selecione...</option>{customers?.map((c) => <option key={c.id} value={c.id}>{c.name}{c.phone ? ` — ${c.phone}` : ""}</option>)}</select></label>
           <label>Nome<input name="name" required /></label>
           <label>Espécie<select name="species" required><option value="Cão">Cão</option><option value="Gato">Gato</option><option value="Outro">Outro</option></select></label>
@@ -98,11 +99,11 @@ export default async function PetsPage({
           <label className="wide">Medicamentos<textarea name="medications" /></label>
           <label className="wide">Observações<textarea name="notes" /></label>
           <div className="form-actions"><button className="primary">Cadastrar pet</button></div>
-        </form>
+        </SafeActionForm>
       </div></section>
 
       <section className="panel"><div className="panel-head"><h2>Novo agendamento</h2></div><div className="panel-body">
-        <form action={createPetAppointment} className="form-grid">
+        <SafeActionForm action={createPetAppointment} className="form-grid" successMessage="Serviço agendado com sucesso.">
           <label className="wide">Pet<select name="pet_id" required><option value="">Selecione...</option>{activePets.map((p) => <option key={p.id} value={p.id}>{p.name} — {relationOne(p.customers)?.name ?? "Sem tutor"}</option>)}</select></label>
           <label>Serviço<select name="service_type" required><option>Banho</option><option>Banho + tosa</option><option>Tosa</option><option>Higiene</option><option>Outro</option></select></label>
           <label>Data e hora<input name="scheduled_at" type="datetime-local" required /></label>
@@ -110,7 +111,7 @@ export default async function PetsPage({
           <label>Responsável<input name="responsible" /></label>
           <label className="wide">Observações do atendimento<textarea name="service_notes" /></label>
           <div className="form-actions"><button className="primary">Agendar</button></div>
-        </form>
+        </SafeActionForm>
       </div></section>
     </div>
 

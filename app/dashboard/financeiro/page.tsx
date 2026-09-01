@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
-import { createFinancialTransaction, markFinancialPaid } from "@/lib/actions";
+import { FinancialTransactionsManager, type FinancialTransaction } from "@/components/financial-transactions-manager";
+import { createFinancialTransaction } from "@/lib/actions";
 import { requireStoreUser } from "@/lib/auth";
 import { brl, dateBR } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -13,31 +14,22 @@ function cashMovementLabel(type: string) {
 }
 
 export default async function FinancePage() {
-  await requireStoreUser();
+  const auth = await requireStoreUser();
   const supabase = await createClient();
   const [{ data: rows }, { data: cashMovements }, { data: cashSessions }] = await Promise.all([
-    supabase.from("financial_transactions").select("*").order("created_at", { ascending: false }).limit(200),
-    supabase.from("cash_movements").select("id,movement_type,amount,description,created_at,cash_session_id,sale_id").order("created_at", { ascending: false }).limit(100),
-    supabase.from("cash_sessions").select("id,status,opening_amount,expected_amount,closing_amount,difference,opened_at,closed_at").order("opened_at", { ascending: false }).limit(30),
+    supabase.from("financial_transactions").select("id,created_at,transaction_type,category,description,amount,status,sale_id,supplier_id,cash_session_id,source_type").eq("company_id", auth.companyId!).order("created_at", { ascending: false }).limit(200),
+    supabase.from("cash_movements").select("id,movement_type,amount,description,created_at,cash_session_id,sale_id").eq("company_id", auth.companyId!).order("created_at", { ascending: false }).limit(100),
+    supabase.from("cash_sessions").select("id,status,opening_amount,expected_amount,closing_amount,difference,opened_at,closed_at").eq("company_id", auth.companyId!).order("opened_at", { ascending: false }).limit(30),
   ]);
 
   const list = rows ?? [];
   const pdvMovements = cashMovements ?? [];
   const sessions = cashSessions ?? [];
-  const paidIncome = list.filter((r) => r.transaction_type === "income" && r.status === "paid").reduce((a, r) => a + Number(r.amount), 0);
-  const paidExpense = list.filter((r) => r.transaction_type === "expense" && r.status === "paid").reduce((a, r) => a + Number(r.amount), 0);
-  const pending = list.filter((r) => r.status === "pending").reduce((a, r) => a + Number(r.amount), 0);
   const withdrawals = pdvMovements.filter((row) => row.movement_type === "withdrawal").reduce((a, row) => a + Number(row.amount), 0);
   const supplies = pdvMovements.filter((row) => row.movement_type === "supply").reduce((a, row) => a + Number(row.amount), 0);
 
   return <>
     <PageHeader eyebrow="CAIXA" title="Financeiro" description="Controle entradas, despesas e também acompanhe tudo que acontece no PDV da empresa." />
-    <div className="stat-grid">
-      <StatCard label="Entradas realizadas" value={brl(paidIncome)} tone="success" />
-      <StatCard label="Saídas realizadas" value={brl(paidExpense)} />
-      <StatCard label="Saldo realizado" value={brl(paidIncome - paidExpense)} tone="success" />
-      <StatCard label="Lançamentos pendentes" value={brl(pending)} tone={pending ? "warning" : "default"} />
-    </div>
 
     <section className="panel"><div className="panel-head"><h2>Novo lançamento</h2></div><div className="panel-body"><form action={createFinancialTransaction} className="form-grid">
       <label>Tipo<select name="transaction_type"><option value="expense">Despesa / saída</option><option value="income">Entrada</option></select></label>
@@ -49,10 +41,7 @@ export default async function FinancePage() {
       <div className="form-actions"><button className="primary">Adicionar lançamento</button></div>
     </form></div></section>
 
-    <section className="panel section-gap"><div className="panel-head"><h2>Movimentações financeiras</h2><span className="badge">{list.length}</span></div><div className="table-wrap"><table><thead><tr><th>Data</th><th>Origem</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Status</th><th>Valor</th><th></th></tr></thead><tbody>
-      {list.map((r) => <tr key={r.id}><td>{dateBR(r.created_at)}</td><td><span className={`badge ${r.cash_session_id ? "success" : ""}`}>{r.cash_session_id ? "PDV" : "CRM"}</span></td><td>{r.transaction_type === "income" ? "Entrada" : "Saída"}</td><td>{r.category}</td><td>{r.description}</td><td><span className={`badge ${r.status === "paid" ? "success" : r.status === "pending" ? "warning" : ""}`}>{r.status === "paid" ? "Realizado" : r.status === "pending" ? "Pendente" : "Cancelado"}</span></td><td className="amount">{brl(r.amount)}</td><td>{r.status === "pending" ? <form action={markFinancialPaid}><input type="hidden" name="id" value={r.id}/><button className="secondary">Dar baixa</button></form> : null}</td></tr>)}
-      {!list.length ? <tr><td colSpan={8} className="empty">Nenhum lançamento financeiro.</td></tr> : null}
-    </tbody></table></div></section>
+    <FinancialTransactionsManager key={list.map((row) => row.id).join(",")} initialRows={list as FinancialTransaction[]} />
 
     <section className="panel section-gap">
       <div className="panel-head"><h2>Movimentos do PDV</h2><span className="badge">{pdvMovements.length}</span></div>

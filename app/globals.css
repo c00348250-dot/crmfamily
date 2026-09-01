@@ -37,7 +37,9 @@ textarea { min-height: 90px; resize: vertical; }
 .primary:disabled { opacity: .6; cursor: wait; }
 .secondary { border: 1px solid var(--border); border-radius: 10px; background: white; color: var(--text); padding: 10px 14px; font-weight: 700; }
 .danger { border: 1px solid #efcece; background: #fff5f5; color: var(--danger); border-radius: 8px; padding: 8px 10px; font-weight: 700; }
-.form-error { color: var(--danger); margin: 0; font-size: .9rem; }
+.form-error { grid-column: 1 / -1; color: var(--danger); margin: 0; font-size: .9rem; }
+.form-error, .access-result { width: 100%; }
+.form-grid > .form-error, .form-grid > .access-result { grid-column: 1 / -1; }
 .login-footnote { font-size: .8rem; color: var(--muted); margin: 0; text-align: center; }
 .eyebrow { color: var(--gold); font-weight: 800; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; }
 .muted { color: var(--muted); }

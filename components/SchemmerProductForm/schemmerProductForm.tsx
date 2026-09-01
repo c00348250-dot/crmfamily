@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { SafeActionForm } from "@/components/safe-action-form";
 import { createSchemmerProduct } from "@/lib/schemmer-product-actions";
 
 type VariantRow = {
@@ -54,7 +55,7 @@ export function SchemmerProductForm() {
   }
 
   return (
-    <form action={createSchemmerProduct} className="form-grid">
+    <SafeActionForm action={createSchemmerProduct} className="form-grid" successMessage="Produto cadastrado com sucesso.">
       <label>SKU base<input name="sku" required placeholder="Ex.: CAP-IP12" /></label>
       <label>Código de barras<input name="barcode" placeholder="Opcional" /></label>
       <label className="wide">Nome<input name="name" required placeholder="Ex.: Capa para iPhone 12" /></label>
@@ -101,6 +102,6 @@ export function SchemmerProductForm() {
       )}
 
       <div className="form-actions"><button className="primary">Cadastrar produto</button></div>
-    </form>
+    </SafeActionForm>
   );
 }
