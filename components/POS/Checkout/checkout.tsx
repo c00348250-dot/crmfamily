@@ -8,6 +8,13 @@ import type { PosCartItem, PosCatalogItem, PosCustomer, PosPaymentMethod } from 
 import styles from "./checkout.module.css";
 
 type PaymentRow = { id: number; method: PosPaymentMethod; amount: number };
+type ServiceForm = {
+  name: string;
+  description: string;
+  quantity: number;
+  price: number;
+  cost: number;
+};
 
 const paymentLabels: Record<PosPaymentMethod, string> = {
   cash: "Dinheiro",
@@ -31,6 +38,32 @@ function toCart(item: PosCatalogItem): PosCartItem {
     customerId: item.customerId,
     customerName: item.customerName,
   };
+}
+
+function serviceCartItem(form: ServiceForm): PosCartItem {
+  const now = Date.now();
+  return {
+    key: `manual_service:${now}:${Math.random().toString(36).slice(2)}`,
+    sourceType: "manual_service",
+    sourceId: `manual-service-${now}`,
+    name: form.name,
+    subtitle: form.description || "Serviço avulso",
+    price: form.price,
+    quantity: form.quantity,
+    maxQuantity: 999999,
+    serviceDescription: form.description || null,
+    unitCost: form.cost,
+  };
+}
+
+function sourceLabel(sourceType: PosCatalogItem["sourceType"] | PosCartItem["sourceType"]) {
+  if (sourceType === "device_unit") return "IMEI";
+  if (sourceType === "variant") return "VARIAÇÃO";
+  if (sourceType === "bundle") return "KIT";
+  if (sourceType === "service_order") return "OS";
+  if (sourceType === "pet_appointment") return "AGENDA";
+  if (sourceType === "manual_service") return "SERVIÇO";
+  return "PRODUTO";
 }
 
 export function Checkout({
@@ -57,6 +90,8 @@ export function Checkout({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState<{ message: string; saleId: string } | null>(null);
   const [paymentSeed, setPaymentSeed] = useState(1);
+  const [serviceModalOpen, setServiceModalOpen] = useState(false);
+  const [serviceForm, setServiceForm] = useState<ServiceForm>({ name: "", description: "", quantity: 1, price: 0, cost: 0 });
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
   const total = Math.max(0, subtotal - Math.max(0, discount));
@@ -95,6 +130,42 @@ export function Checkout({
 
   function removeItem(key: string) {
     setCart((current) => current.filter((item) => item.key !== key));
+  }
+
+  function updateServiceForm(patch: Partial<ServiceForm>) {
+    setServiceForm((current) => ({ ...current, ...patch }));
+  }
+
+  function addService() {
+    setError("");
+    setSuccess(null);
+
+    const name = serviceForm.name.trim();
+    const description = serviceForm.description.trim();
+    const quantity = Number(serviceForm.quantity || 0);
+    const price = Number(serviceForm.price || 0);
+    const cost = Number(serviceForm.cost || 0);
+
+    if (!name) {
+      setError("Informe o nome do serviço.");
+      return;
+    }
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      setError("Informe uma quantidade válida para o serviço.");
+      return;
+    }
+    if (!Number.isFinite(price) || price <= 0) {
+      setError("Informe um valor de venda maior que zero para o serviço.");
+      return;
+    }
+    if (!Number.isFinite(cost) || cost < 0) {
+      setError("Informe um custo válido para o serviço.");
+      return;
+    }
+
+    setCart((current) => [...current, serviceCartItem({ name, description, quantity, price, cost })]);
+    setServiceForm({ name: "", description: "", quantity: 1, price: 0, cost: 0 });
+    setServiceModalOpen(false);
   }
 
   function exactSearch() {
@@ -177,8 +248,12 @@ export function Checkout({
           dueDate: dueDate || null,
           items: cart.map((item) => ({
             source_type: item.sourceType,
-            source_id: item.sourceId,
+            source_id: item.sourceType === "manual_service" ? null : item.sourceId,
             quantity: item.quantity,
+            service_name: item.sourceType === "manual_service" ? item.name : undefined,
+            service_description: item.sourceType === "manual_service" ? item.serviceDescription : undefined,
+            unit_price: item.sourceType === "manual_service" ? item.price : undefined,
+            unit_cost: item.sourceType === "manual_service" ? (item.unitCost ?? 0) : undefined,
           })),
           payments: payments.filter((payment) => payment.amount > 0).map((payment) => ({
             payment_method: payment.method,
@@ -200,6 +275,8 @@ export function Checkout({
       setCashReceived(0);
       setDueDate("");
       setQuery("");
+      setServiceForm({ name: "", description: "", quantity: 1, price: 0, cost: 0 });
+      setServiceModalOpen(false);
       router.refresh();
 
       if (saleId) window.open(`/caixa/comprovante/${saleId}`, "_blank", "noopener,noreferrer");
@@ -215,7 +292,12 @@ export function Checkout({
       <section className={styles.catalogPanel}>
         <div className={styles.sectionHeader}>
           <div><span>CATÁLOGO</span><h1>Venda rápida</h1></div>
-          <small>{catalog.length} item(ns) disponíveis</small>
+          <button type="button" className={styles.serviceButton} onClick={() => setServiceModalOpen(true)}>+ Venda de serviço</button>
+        </div>
+
+        <div className={styles.catalogActions}>
+          <button type="button" className={styles.serviceButton} onClick={() => setServiceModalOpen(true)}>+ Venda de serviço</button>
+          <small>{catalog.length} produto(s), kits e itens cadastrados disponíveis</small>
         </div>
 
         <div className={styles.searchBox}>
@@ -239,7 +321,7 @@ export function Checkout({
         <div className={styles.catalogGrid}>
           {results.map((item) => (
             <button type="button" className={styles.catalogItem} key={item.key} onClick={() => addItem(item)}>
-              <span className={styles.catalogType}>{item.sourceType === "device_unit" ? "IMEI" : item.sourceType === "variant" ? "VARIAÇÃO" : item.sourceType === "bundle" ? "KIT" : "PRODUTO"}</span>
+              <span className={styles.catalogType}>{sourceLabel(item.sourceType)}</span>
               <strong>{item.name}</strong>
               <small>{item.subtitle}</small>
               <div><b>{brl(item.price)}</b><span>{item.stock >= 999999 ? "Kit" : `${item.stock.toLocaleString("pt-BR")} disponível`}</span></div>
@@ -248,6 +330,27 @@ export function Checkout({
           {!results.length ? <div className={styles.emptyCatalog}>Nenhum item encontrado para “{query}”.</div> : null}
         </div>
       </section>
+
+      {serviceModalOpen ? (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="service-sale-title">
+          <div className={styles.serviceModal}>
+            <div className={styles.modalHead}>
+              <div><span>VENDA DE SERVIÇO</span><strong id="service-sale-title">Lançar serviço avulso</strong></div>
+              <button type="button" onClick={() => setServiceModalOpen(false)} aria-label="Fechar venda de serviço">×</button>
+            </div>
+
+            <div className={styles.serviceForm}>
+              <label className={styles.wide}>Serviço realizado<input value={serviceForm.name} onChange={(event) => updateServiceForm({ name: event.target.value })} required placeholder="Ex.: Troca de tela, consultoria, banho avulso..." /></label>
+              <label>Quantidade<input type="number" min="0.001" step="0.001" value={serviceForm.quantity} onChange={(event) => updateServiceForm({ quantity: Number(event.target.value) })} required /></label>
+              <label>Valor de venda (R$)<input type="number" min="0.01" step="0.01" value={serviceForm.price} onChange={(event) => updateServiceForm({ price: Number(event.target.value) })} required /></label>
+              <label>Custo do serviço (R$)<input type="number" min="0" step="0.01" value={serviceForm.cost} onChange={(event) => updateServiceForm({ cost: Number(event.target.value) })} /></label>
+              <label className={styles.wide}>Descrição / observações<textarea value={serviceForm.description} onChange={(event) => updateServiceForm({ description: event.target.value })} placeholder="Detalhes do atendimento para aparecer no CRM e no comprovante." /></label>
+              <div className={styles.servicePreview}><span>Total do serviço</span><strong>{brl(Math.max(0, Number(serviceForm.quantity || 0)) * Math.max(0, Number(serviceForm.price || 0)))}</strong></div>
+              <div className={styles.modalActions}><button type="button" onClick={() => setServiceModalOpen(false)}>Cancelar</button><button type="button" onClick={addService}>Adicionar ao carrinho</button></div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <aside className={styles.checkoutPanel}>
         <div className={styles.checkoutHead}>
@@ -260,7 +363,7 @@ export function Checkout({
             <article className={styles.cartItem} key={item.key}>
               <div className={styles.cartCopy}>
                 <strong>{item.name}</strong>
-                <small>{item.subtitle}</small>
+                <small><span className={styles.cartType}>{sourceLabel(item.sourceType)}</span>{item.subtitle}</small>
                 <span>{brl(item.price)} / un.</span>
               </div>
               <div className={styles.quantityBox}>

@@ -17,7 +17,7 @@ export default async function FinancePage() {
   const auth = await requireStoreUser();
   const supabase = await createClient();
   const [{ data: rows }, { data: cashMovements }, { data: cashSessions }] = await Promise.all([
-    supabase.from("financial_transactions").select("id,created_at,transaction_type,category,description,amount,status,sale_id,supplier_id,cash_session_id,source_type").eq("company_id", auth.companyId!).order("created_at", { ascending: false }).limit(200),
+    supabase.from("financial_transactions").select("id,created_at,due_date,transaction_type,category,description,amount,status,sale_id,supplier_id,cash_session_id,source_type").eq("company_id", auth.companyId!).order("created_at", { ascending: false }).limit(200),
     supabase.from("cash_movements").select("id,movement_type,amount,description,created_at,cash_session_id,sale_id").eq("company_id", auth.companyId!).order("created_at", { ascending: false }).limit(100),
     supabase.from("cash_sessions").select("id,status,opening_amount,expected_amount,closing_amount,difference,opened_at,closed_at").eq("company_id", auth.companyId!).order("opened_at", { ascending: false }).limit(30),
   ]);

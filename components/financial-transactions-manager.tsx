@@ -6,7 +6,7 @@ import { brl, dateBR } from "@/lib/format";
 import styles from "./financial-transactions-manager.module.css";
 
 export type FinancialTransaction = {
-  id: string; created_at: string; transaction_type: "income" | "expense";
+  id: string; created_at: string; due_date: string | null; transaction_type: "income" | "expense";
   category: string; description: string; amount: number | string;
   status: "pending" | "paid" | "cancelled"; sale_id: string | null;
   supplier_id: string | null; cash_session_id: string | null; source_type: "manual" | "sale" | "pos" | "purchase";
@@ -15,9 +15,6 @@ type ActionResult = { ok: boolean; error?: string };
 
 function dateInputValue(value: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(value));
-}
-function isAutomatic(row: FinancialTransaction) {
-  return row.source_type !== "manual";
 }
 function originLabel(row: FinancialTransaction) {
   if (row.source_type === "pos") return "PDV";
@@ -46,13 +43,13 @@ export function FinancialTransactionsManager({ initialRows }: { initialRows: Fin
       category: String(data.get("category") ?? "").trim(), description: String(data.get("description") ?? "").trim(),
       status: ["pending", "paid", "cancelled"].includes(String(data.get("status"))) ? String(data.get("status")) as FinancialTransaction["status"] : "pending",
       amount: Number(data.get("amount")),
+      due_date: String(data.get("due_date") ?? "") || null,
     };
     setError(""); setRows((current) => current.map((r) => r.id === updated.id ? updated : r)); setEditing(null);
     startTransition(async () => { const result = await updateFinancialTransaction(data) as ActionResult; if (!result.ok) { setRows(previous); setError(result.error ?? "Não foi possível editar a movimentação."); } });
   }
 
   function remove(row: FinancialTransaction) {
-    if (isAutomatic(row)) { setError("Movimentações automáticas devem ser canceladas ou estornadas no módulo de origem."); return; }
     if (!window.confirm(`Excluir a movimentação “${row.description}” no valor de ${brl(row.amount)}? Esta ação ficará registrada na auditoria.`)) return;
     const previous = rows; const data = new FormData(); data.set("id", row.id);
     setError(""); setRows((current) => current.filter((item) => item.id !== row.id));
@@ -77,9 +74,10 @@ export function FinancialTransactionsManager({ initialRows }: { initialRows: Fin
     <section className="panel section-gap">
       <div className="panel-head"><h2>Movimentações financeiras</h2><span className="badge">{rows.length}</span></div>
       {error ? <div className={styles.error} role="alert">{error}</div> : null}
-      <div className={`table-wrap ${styles.tableWrap}`}><table><thead><tr><th>Data</th><th>Origem</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Status</th><th>Valor</th><th>Ações</th></tr></thead><tbody>
+      <div className={`table-wrap ${styles.tableWrap}`}><table><thead><tr><th>Data</th><th>Vencimento</th><th>Origem</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Status</th><th>Valor</th><th>Ações</th></tr></thead><tbody>
         {rows.map((row) => <tr key={row.id}>
           <td data-label="Data">{dateBR(row.created_at)}</td>
+          <td data-label="Vencimento">{row.due_date ? dateBR(row.due_date) : "—"}</td>
           <td data-label="Origem"><span className={`badge ${row.cash_session_id ? "success" : ""}`}>{originLabel(row)}</span></td>
           <td data-label="Tipo">{row.transaction_type === "income" ? "Entrada" : "Saída"}</td>
           <td data-label="Categoria">{row.category}</td><td data-label="Descrição">{row.description}</td>
@@ -88,10 +86,10 @@ export function FinancialTransactionsManager({ initialRows }: { initialRows: Fin
           <td data-label="Ações"><div className={styles.actions}>
             {row.status === "pending" ? <button type="button" className="secondary" disabled={pending} onClick={() => markPaid(row)}>Dar baixa</button> : null}
             <button type="button" className="secondary" disabled={pending} onClick={() => { setError(""); setEditing(row); }}>Editar</button>
-            <button type="button" className="danger" disabled={pending || isAutomatic(row)} title={isAutomatic(row) ? "Exclua ou estorne no módulo de origem" : "Excluir movimentação"} onClick={() => remove(row)}>Excluir</button>
-          </div>{isAutomatic(row) ? <small className={styles.protected}>Exclusão protegida</small> : null}</td>
+            <button type="button" className="danger" disabled={pending} title="Excluir movimentação" onClick={() => remove(row)}>Excluir</button>
+          </div></td>
         </tr>)}
-        {!rows.length ? <tr><td colSpan={8} className="empty">Nenhum lançamento financeiro.</td></tr> : null}
+        {!rows.length ? <tr><td colSpan={9} className="empty">Nenhum lançamento financeiro.</td></tr> : null}
       </tbody></table></div>
     </section>
 
@@ -101,6 +99,7 @@ export function FinancialTransactionsManager({ initialRows }: { initialRows: Fin
         <form className="form-grid" onSubmit={save}>
           <input type="hidden" name="id" value={editing.id} />
           <label>Data<input name="transaction_date" type="date" defaultValue={dateInputValue(editing.created_at)} required /></label>
+          <label>Vencimento<input name="due_date" type="date" defaultValue={editing.due_date ? dateInputValue(editing.due_date) : ""} /></label>
           <label>Tipo<select name="transaction_type" defaultValue={editing.transaction_type}><option value="expense">Despesa / saída</option><option value="income">Entrada</option></select></label>
           <label>Categoria<input name="category" defaultValue={editing.category} maxLength={120} required /></label>
           <label>Status<select name="status" defaultValue={editing.status}><option value="pending">Pendente</option><option value="paid">Pago / recebido</option><option value="cancelled">Cancelado</option></select></label>
