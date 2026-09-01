@@ -125,6 +125,8 @@ Execute no **SQL Editor** do Supabase, nesta ordem:
 ```text
 supabase/upgrade-2026-08-21.sql
 supabase/pdv-2026-08-22.sql
+supabase/pdv-crm-sync-2026-08-26.sql
+supabase/finance-management-2026-08-27.sql
 ```
 
 O segundo script:

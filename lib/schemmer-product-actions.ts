@@ -79,6 +79,7 @@ function revalidateInventory() {
 
 export async function createSchemmerProduct(formData: FormData) {
   const { auth, supabase } = await requireSchemmer();
+  if (!auth.companyId) throw new Error("Empresa não identificada.");
   const usesVariants = text(formData, "stock_mode") === "variants";
   const variants = usesVariants ? parseVariants(formData) : [];
   const baseSku = text(formData, "sku");
@@ -109,7 +110,12 @@ export async function createSchemmerProduct(formData: FormData) {
     .select("id")
     .single();
 
-  if (productError || !product) throw new Error(productError?.message ?? "Não foi possível cadastrar o produto.");
+  if (productError || !product) {
+    const message = productError?.message.includes("duplicate")
+      ? "Já existe um produto com este SKU nesta empresa."
+      : (productError?.message ?? "Não foi possível cadastrar o produto.");
+    throw new Error(message);
+  }
 
   try {
     if (!usesVariants) {
@@ -148,7 +154,7 @@ export async function createSchemmerProduct(formData: FormData) {
       });
 
       const { error: variantError } = await supabase.from("product_variants").insert(rows);
-      if (variantError) throw new Error(variantError.message);
+      if (variantError) throw new Error(variantError.message.includes("duplicate") ? "Já existe uma variação com este SKU nesta empresa." : variantError.message);
     }
   } catch (error) {
     await supabase.from("products").delete().eq("id", product.id);

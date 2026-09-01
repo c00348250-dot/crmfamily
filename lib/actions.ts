@@ -21,6 +21,16 @@ function number(formData: FormData, key: string, fallback = 0) {
 
 export async function createProduct(formData: FormData) {
   const auth = await requireStoreUser();
+  if (!auth.companyId) throw new Error("Empresa não identificada.");
+
+  const sku = text(formData, "sku");
+  const name = text(formData, "name");
+  const price = number(formData, "price");
+
+  if (!sku) throw new Error("Informe o SKU do produto.");
+  if (!name) throw new Error("Informe o nome do produto.");
+  if (price < 0) throw new Error("Preço de venda inválido.");
+
   const supabase = await createClient();
   const initialStock = Math.max(0, number(formData, "stock_qty"));
 
@@ -28,20 +38,20 @@ export async function createProduct(formData: FormData) {
     .from("products")
     .insert({
       company_id: auth.companyId,
-      sku: text(formData, "sku"),
+      sku,
       barcode: optional(formData, "barcode"),
-      name: text(formData, "name"),
+      name,
       description: optional(formData, "description"),
       category: optional(formData, "category"),
       cost: Math.max(0, number(formData, "cost")),
-      price: Math.max(0, number(formData, "price")),
+      price: Math.max(0, price),
       stock_qty: 0,
       min_stock: Math.max(0, number(formData, "min_stock")),
     })
     .select("id")
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message.includes("duplicate") ? "Já existe um produto com este SKU nesta empresa." : error.message);
 
   if (initialStock > 0 && data?.id) {
     const stockResult = await supabase.rpc("adjust_stock", {
@@ -147,15 +157,40 @@ export async function createFinancialTransaction(formData: FormData) {
 }
 
 export async function markFinancialPaid(formData: FormData) {
+  const auth = await requireStoreUser();
+  const supabase = await createClient();
+  const id = text(formData, "id");
+  const { data: before } = await supabase.from("financial_transactions").select("status,paid_at").eq("id", id).eq("company_id", auth.companyId!).single();
+  if (!before) return { ok: false, error: "Movimentação não encontrada nesta empresa." };
+  const { error } = await supabase.from("financial_transactions").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", id).eq("company_id", auth.companyId!);
+  if (error) return { ok: false, error: error.message };
+  await supabase.from("audit_logs").insert({ company_id: auth.companyId, user_id: auth.id, action: "update", entity_type: "financial_transaction", entity_id: id, details: { operation: "mark_paid", before } });
+  revalidatePath("/dashboard"); revalidatePath("/dashboard/financeiro");
+  return { ok: true };
+}
+
+export async function updateFinancialTransaction(formData: FormData) {
   await requireStoreUser();
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("financial_transactions")
-    .update({ status: "paid", paid_at: new Date().toISOString() })
-    .eq("id", text(formData, "id"));
-  if (error) throw new Error(error.message);
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/financeiro");
+  const amount = number(formData, "amount");
+  if (amount <= 0) return { ok: false, error: "O valor deve ser maior que zero." };
+  const result = await supabase.rpc("update_financial_transaction", {
+    p_id: text(formData, "id"), p_transaction_date: text(formData, "transaction_date"),
+    p_transaction_type: text(formData, "transaction_type"), p_category: text(formData, "category"),
+    p_description: text(formData, "description"), p_status: text(formData, "status"), p_amount: amount,
+  });
+  if (result.error) return { ok: false, error: result.error.message };
+  revalidatePath("/dashboard"); revalidatePath("/dashboard/financeiro"); revalidatePath("/dashboard/alertas");
+  return { ok: true };
+}
+
+export async function deleteFinancialTransaction(formData: FormData) {
+  await requireStoreUser();
+  const supabase = await createClient();
+  const result = await supabase.rpc("delete_financial_transaction", { p_id: text(formData, "id") });
+  if (result.error) return { ok: false, error: result.error.message };
+  revalidatePath("/dashboard"); revalidatePath("/dashboard/financeiro"); revalidatePath("/dashboard/alertas");
+  return { ok: true };
 }
 
 export async function createReceivable(formData: FormData) {

@@ -24,16 +24,26 @@ async function audit(supabase: Awaited<ReturnType<typeof createClient>>, company
 
 export async function createServiceOrder(formData: FormData) {
   const auth = await requireStoreUser();
+  if (!auth.companyId) throw new Error("Empresa não identificada.");
+
+  const deviceBrand = text(formData, "device_brand");
+  const deviceModel = text(formData, "device_model");
+  const issueReported = text(formData, "issue_reported");
+
+  if (!deviceBrand) throw new Error("Informe a marca do aparelho.");
+  if (!deviceModel) throw new Error("Informe o modelo do aparelho.");
+  if (!issueReported) throw new Error("Informe o defeito do aparelho.");
+
   const supabase = await createClient();
   const payload = {
     company_id: auth.companyId,
     customer_id: optional(formData, "customer_id"),
-    device_brand: text(formData, "device_brand"),
-    device_model: text(formData, "device_model"),
+    device_brand: deviceBrand,
+    device_model: deviceModel,
     imei: optional(formData, "imei"),
     serial_number: optional(formData, "serial_number"),
     color: optional(formData, "color"),
-    issue_reported: text(formData, "issue_reported"),
+    issue_reported: issueReported,
     condition_notes: optional(formData, "condition_notes"),
     accessories: optional(formData, "accessories"),
     technician: optional(formData, "technician"),
@@ -47,7 +57,7 @@ export async function createServiceOrder(formData: FormData) {
   };
   const { data, error } = await supabase.from("service_orders").insert(payload).select("id").single();
   if (error) throw new Error(error.message);
-  await audit(supabase, auth.companyId!, auth.id, "create", "service_order", data.id, { model: `${payload.device_brand} ${payload.device_model}` });
+  await audit(supabase, auth.companyId, auth.id, "create", "service_order", data.id, { model: `${payload.device_brand} ${payload.device_model}` });
   revalidatePath("/dashboard/assistencia");
   revalidatePath("/dashboard/alertas");
 }
@@ -68,12 +78,19 @@ export async function updateServiceOrderStatus(formData: FormData) {
 
 export async function createDeviceUnit(formData: FormData) {
   const auth = await requireStoreUser();
+  if (!auth.companyId) throw new Error("Empresa não identificada.");
+
+  const brand = text(formData, "brand");
+  const model = text(formData, "model");
+  if (!brand) throw new Error("Informe a marca do aparelho.");
+  if (!model) throw new Error("Informe o modelo do aparelho.");
+
   const supabase = await createClient();
   const { data, error } = await supabase.from("device_units").insert({
     company_id: auth.companyId,
     product_id: optional(formData, "product_id"),
-    brand: text(formData, "brand"),
-    model: text(formData, "model"),
+    brand,
+    model,
     imei: optional(formData, "imei"),
     serial_number: optional(formData, "serial_number"),
     color: optional(formData, "color"),
@@ -82,18 +99,28 @@ export async function createDeviceUnit(formData: FormData) {
     warranty_days: Math.max(0, Math.round(numberValue(formData, "warranty_days", 90))),
   }).select("id").single();
   if (error) throw new Error(error.message);
-  await audit(supabase, auth.companyId!, auth.id, "create", "device_unit", data.id, { imei: optional(formData, "imei"), model: text(formData, "model") });
+  await audit(supabase, auth.companyId, auth.id, "create", "device_unit", data.id, { imei: optional(formData, "imei"), model });
   revalidatePath("/dashboard/assistencia");
 }
 
 export async function createPet(formData: FormData) {
   const auth = await requireStoreUser();
+  if (!auth.companyId) throw new Error("Empresa não identificada.");
+
+  const customerId = text(formData, "customer_id");
+  const name = text(formData, "name");
+  const species = text(formData, "species");
+
+  if (!customerId) throw new Error("Selecione o tutor do pet.");
+  if (!name) throw new Error("Informe o nome do pet.");
+  if (!species) throw new Error("Informe a espécie do pet.");
+
   const supabase = await createClient();
   const { data, error } = await supabase.from("pets").insert({
     company_id: auth.companyId,
-    customer_id: text(formData, "customer_id"),
-    name: text(formData, "name"),
-    species: text(formData, "species"),
+    customer_id: customerId,
+    name,
+    species,
     breed: optional(formData, "breed"),
     sex: optional(formData, "sex"),
     birth_date: optional(formData, "birth_date"),
@@ -106,23 +133,31 @@ export async function createPet(formData: FormData) {
     notes: optional(formData, "notes"),
   }).select("id").single();
   if (error) throw new Error(error.message);
-  await audit(supabase, auth.companyId!, auth.id, "create", "pet", data.id, { name: text(formData, "name") });
+  await audit(supabase, auth.companyId, auth.id, "create", "pet", data.id, { name });
   revalidatePath("/dashboard/pets");
 }
 
 export async function createPetAppointment(formData: FormData) {
   const auth = await requireStoreUser();
-  const supabase = await createClient();
+  if (!auth.companyId) throw new Error("Empresa não identificada.");
+
   const petId = text(formData, "pet_id");
-  const { data: pet, error: petError } = await supabase.from("pets").select("customer_id").eq("id", petId).single();
-  if (petError || !pet?.customer_id) throw new Error("Pet ou tutor não encontrado.");
+  const serviceType = text(formData, "service_type");
   const scheduled = text(formData, "scheduled_at");
-  const scheduledAt = scheduled ? new Date(`${scheduled}:00-03:00`).toISOString() : new Date().toISOString();
+
+  if (!petId) throw new Error("Selecione o pet do agendamento.");
+  if (!serviceType) throw new Error("Informe o tipo de serviço.");
+  if (!scheduled) throw new Error("Informe a data e hora do agendamento.");
+
+  const supabase = await createClient();
+  const { data: pet, error: petError } = await supabase.from("pets").select("customer_id").eq("id", petId).eq("company_id", auth.companyId).single();
+  if (petError || !pet?.customer_id) throw new Error("Pet ou tutor não encontrado nesta empresa.");
+  const scheduledAt = new Date(`${scheduled}:00-03:00`).toISOString();
   const { data, error } = await supabase.from("pet_appointments").insert({
     company_id: auth.companyId,
     pet_id: petId,
     customer_id: pet.customer_id,
-    service_type: text(formData, "service_type"),
+    service_type: serviceType,
     scheduled_at: scheduledAt,
     price: Math.max(0, numberValue(formData, "price")),
     responsible: optional(formData, "responsible"),
@@ -130,7 +165,7 @@ export async function createPetAppointment(formData: FormData) {
     created_by: auth.id,
   }).select("id").single();
   if (error) throw new Error(error.message);
-  await audit(supabase, auth.companyId!, auth.id, "create", "pet_appointment", data.id, { service: text(formData, "service_type") });
+  await audit(supabase, auth.companyId, auth.id, "create", "pet_appointment", data.id, { service: serviceType });
   revalidatePath("/dashboard/pets");
   revalidatePath("/dashboard/alertas");
 }
