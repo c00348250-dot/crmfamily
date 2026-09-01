@@ -216,7 +216,15 @@ export function createPosRepository(supabase: DatabaseClient) {
       customerId: string | null;
       discount: number;
       dueDate: string | null;
-      items: Array<{ source_type: string; source_id: string; quantity: number }>;
+      items: Array<{
+        source_type: string;
+        source_id: string | null;
+        quantity: number;
+        service_name?: string;
+        service_description?: string | null;
+        unit_price?: number;
+        unit_cost?: number;
+      }>;
       payments: Array<{ payment_method: string; amount: number }>;
     }) {
       const result = await supabase.rpc("create_pos_sale", {

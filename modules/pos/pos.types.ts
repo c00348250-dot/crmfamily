@@ -4,7 +4,8 @@ export type PosSourceType =
   | "bundle"
   | "device_unit"
   | "service_order"
-  | "pet_appointment";
+  | "pet_appointment"
+  | "manual_service";
 
 export type PosPaymentMethod = "cash" | "pix" | "debit_card" | "credit_card" | "transfer" | "other";
 
@@ -39,6 +40,8 @@ export type PosCartItem = {
   maxQuantity: number;
   customerId?: string | null;
   customerName?: string | null;
+  serviceDescription?: string | null;
+  unitCost?: number;
 };
 
 export type PosPaymentInput = {
@@ -48,8 +51,12 @@ export type PosPaymentInput = {
 
 export type PosSaleItemInput = {
   source_type: PosSourceType;
-  source_id: string;
+  source_id: string | null;
   quantity: number;
+  service_name?: string;
+  service_description?: string | null;
+  unit_price?: number;
+  unit_cost?: number;
 };
 
 export type CashSessionSummary = {

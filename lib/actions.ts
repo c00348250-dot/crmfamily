@@ -176,7 +176,7 @@ export async function updateFinancialTransaction(formData: FormData) {
   if (amount <= 0) return { ok: false, error: "O valor deve ser maior que zero." };
   const result = await supabase.rpc("update_financial_transaction", {
     p_id: text(formData, "id"), p_transaction_date: text(formData, "transaction_date"),
-    p_transaction_type: text(formData, "transaction_type"), p_category: text(formData, "category"),
+    p_due_date: optional(formData, "due_date"), p_transaction_type: text(formData, "transaction_type"), p_category: text(formData, "category"),
     p_description: text(formData, "description"), p_status: text(formData, "status"), p_amount: amount,
   });
   if (result.error) return { ok: false, error: result.error.message };

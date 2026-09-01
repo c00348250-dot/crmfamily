@@ -1,6 +1,6 @@
 import type { PosPaymentInput, PosPaymentMethod, PosSaleItemInput, PosSourceType } from "@/modules/pos/pos.types";
 
-const sourceTypes: readonly PosSourceType[] = ["product","variant","bundle","device_unit","service_order","pet_appointment"];
+const sourceTypes: readonly PosSourceType[] = ["product","variant","bundle","device_unit","service_order","pet_appointment","manual_service"];
 const paymentMethods: readonly PosPaymentMethod[] = ["cash","pix","debit_card","credit_card","transfer","other"];
 
 function object(value: unknown): Record<string, unknown> {
@@ -71,6 +71,19 @@ export function parseSalePayload(value: unknown) {
     if (!sourceTypes.includes(sourceType)) throw new Error("Tipo de item inválido.");
     const quantity = Number(item.quantity ?? 0);
     if (!Number.isFinite(quantity) || quantity <= 0) throw new Error("Quantidade inválida.");
+
+    if (sourceType === "manual_service") {
+      return {
+        source_type: sourceType,
+        source_id: null,
+        quantity,
+        service_name: text(item.service_name, "o nome do serviço", true),
+        service_description: text(item.service_description, "a descrição do serviço") || null,
+        unit_price: money(item.unit_price, "Valor do serviço", false),
+        unit_cost: money(item.unit_cost, "Custo do serviço"),
+      };
+    }
+
     return {
       source_type: sourceType,
       source_id: text(item.source_id, "o item", true),
