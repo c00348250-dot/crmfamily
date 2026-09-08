@@ -20,6 +20,9 @@ export default async function ProductsPage() {
   const brand = getCompanyBrand(company?.slug, company?.name);
   const isSchemmer = brand.key === "schemmer";
   const rows = products ?? [];
+  const categoryOptions = Array.from(
+    new Set(rows.map((product) => (product.category ?? "").trim()).filter((category) => category.length > 0)),
+  ).sort((a, b) => a.localeCompare(b, "pt-BR"));
   const activeVariants = variants ?? [];
   const variantsFor = (productId: string) => activeVariants.filter((variant) => variant.product_id === productId);
   const simpleProducts = rows.filter((product) => variantsFor(product.id).length === 0);
@@ -57,12 +60,13 @@ export default async function ProductsPage() {
 
     <div className="grid-2">
       <section className="panel"><div className="panel-head"><h2>Novo produto</h2>{isSchemmer ? <span className="badge success">variações disponíveis</span> : null}</div><div className="panel-body">
-        {isSchemmer ? <SchemmerProductForm /> : (
+        {isSchemmer ? <SchemmerProductForm categories={categoryOptions} /> : (
           <SafeActionForm action={createProduct} className="form-grid" successMessage="Produto cadastrado com sucesso.">
             <label>SKU<input name="sku" required placeholder="Ex.: CEL-001" /></label>
             <label>Código de barras<input name="barcode" placeholder="Opcional" /></label>
             <label className="wide">Nome<input name="name" required /></label>
-            <label>Categoria<input name="category" /></label>
+            <label>Categoria<input name="category" list="product-category-options" placeholder="Selecione ou digite uma nova" autoComplete="off" /></label>
+            <datalist id="product-category-options">{categoryOptions.map((category) => <option key={category} value={category} />)}</datalist>
             <label>Estoque inicial<input name="stock_qty" type="number" step="0.001" min="0" defaultValue="0" /></label>
             <label>Estoque mínimo<input name="min_stock" type="number" step="0.001" min="0" defaultValue="0" /></label>
             <label>Custo (R$)<input name="cost" type="number" step="0.01" min="0" defaultValue="0" /></label>

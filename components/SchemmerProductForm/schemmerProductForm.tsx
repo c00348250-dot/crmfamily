@@ -26,7 +26,7 @@ function newVariant(id: number): VariantRow {
   };
 }
 
-export function SchemmerProductForm() {
+export function SchemmerProductForm({ categories = [] }: { categories?: string[] }) {
   const [mode, setMode] = useState<"simple" | "variants">("simple");
   const [nextId, setNextId] = useState(2);
   const [variants, setVariants] = useState<VariantRow[]>([newVariant(1)]);
@@ -59,7 +59,8 @@ export function SchemmerProductForm() {
       <label>SKU base<input name="sku" required placeholder="Ex.: CAP-IP12" /></label>
       <label>Código de barras<input name="barcode" placeholder="Opcional" /></label>
       <label className="wide">Nome<input name="name" required placeholder="Ex.: Capa para iPhone 12" /></label>
-      <label>Categoria<input name="category" placeholder="Capas, películas, cabos..." /></label>
+      <label>Categoria<input name="category" list="schemmer-category-options" placeholder="Selecione ou digite uma nova" autoComplete="off" /></label>
+      <datalist id="schemmer-category-options">{categories.map((category) => <option key={category} value={category} />)}</datalist>
       <label>Custo (R$)<input name="cost" type="number" step="0.01" min="0" defaultValue="0" /></label>
       <label>Preço de venda (R$)<input name="price" type="number" step="0.01" min="0" required /></label>
       <label className="wide">Descrição<textarea name="description" /></label>

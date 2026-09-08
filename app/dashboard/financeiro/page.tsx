@@ -23,6 +23,9 @@ export default async function FinancePage() {
   ]);
 
   const list = rows ?? [];
+  const categoryOptions = Array.from(
+    new Set(list.map((row) => (row.category ?? "").trim()).filter((category) => category.length > 0)),
+  ).sort((a, b) => a.localeCompare(b, "pt-BR"));
   const pdvMovements = cashMovements ?? [];
   const sessions = cashSessions ?? [];
   const withdrawals = pdvMovements.filter((row) => row.movement_type === "withdrawal").reduce((a, row) => a + Number(row.amount), 0);
@@ -34,14 +37,15 @@ export default async function FinancePage() {
     <section className="panel"><div className="panel-head"><h2>Novo lançamento</h2></div><div className="panel-body"><form action={createFinancialTransaction} className="form-grid">
       <label>Tipo<select name="transaction_type"><option value="expense">Despesa / saída</option><option value="income">Entrada</option></select></label>
       <label>Status<select name="status"><option value="pending">Pendente</option><option value="paid">Pago / recebido</option></select></label>
-      <label>Categoria<input name="category" required placeholder="Aluguel, compra, serviços..." /></label>
+      <label>Categoria<input name="category" required list="finance-category-options" placeholder="Selecione ou digite uma nova" autoComplete="off" /></label>
+      <datalist id="finance-category-options">{categoryOptions.map((category) => <option key={category} value={category} />)}</datalist>
       <label>Valor (R$)<input name="amount" type="number" min="0.01" step="0.01" required /></label>
       <label className="wide">Descrição<input name="description" required /></label>
       <label>Vencimento<input name="due_date" type="date" /></label>
       <div className="form-actions"><button className="primary">Adicionar lançamento</button></div>
     </form></div></section>
 
-    <FinancialTransactionsManager key={list.map((row) => row.id).join(",")} initialRows={list as FinancialTransaction[]} />
+    <FinancialTransactionsManager key={list.map((row) => row.id).join(",")} initialRows={list as FinancialTransaction[]} categories={categoryOptions} />
 
     <section className="panel section-gap">
       <div className="panel-head"><h2>Movimentos do PDV</h2><span className="badge">{pdvMovements.length}</span></div>

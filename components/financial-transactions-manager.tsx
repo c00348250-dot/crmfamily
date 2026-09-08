@@ -23,7 +23,7 @@ function originLabel(row: FinancialTransaction) {
   return "Manual";
 }
 
-export function FinancialTransactionsManager({ initialRows }: { initialRows: FinancialTransaction[] }) {
+export function FinancialTransactionsManager({ initialRows, categories = [] }: { initialRows: FinancialTransaction[]; categories?: string[] }) {
   const [rows, setRows] = useState(initialRows);
   const [editing, setEditing] = useState<FinancialTransaction | null>(null);
   const [error, setError] = useState("");
@@ -101,7 +101,7 @@ export function FinancialTransactionsManager({ initialRows }: { initialRows: Fin
           <label>Data<input name="transaction_date" type="date" defaultValue={dateInputValue(editing.created_at)} required /></label>
           <label>Vencimento<input name="due_date" type="date" defaultValue={editing.due_date ? dateInputValue(editing.due_date) : ""} /></label>
           <label>Tipo<select name="transaction_type" defaultValue={editing.transaction_type}><option value="expense">Despesa / saída</option><option value="income">Entrada</option></select></label>
-          <label>Categoria<input name="category" defaultValue={editing.category} maxLength={120} required /></label>
+          <label>Categoria<input name="category" defaultValue={editing.category} maxLength={120} required list="finance-edit-category-options" autoComplete="off" /></label><datalist id="finance-edit-category-options">{categories.map((category) => <option key={category} value={category} />)}</datalist>
           <label>Status<select name="status" defaultValue={editing.status}><option value="pending">Pendente</option><option value="paid">Pago / recebido</option><option value="cancelled">Cancelado</option></select></label>
           <label className="wide">Descrição<input name="description" defaultValue={editing.description} maxLength={300} required /></label>
           <label>Valor (R$)<input name="amount" type="number" min="0.01" step="0.01" defaultValue={Number(editing.amount)} required /></label>
