@@ -87,6 +87,32 @@ export async function archiveProduct(formData: FormData) {
   revalidatePath("/dashboard/produtos");
 }
 
+export async function unarchiveProduct(formData: FormData) {
+  await requireStoreUser();
+  const supabase = await createClient();
+  const { error } = await supabase.from("products").update({ is_active: true }).eq("id", text(formData, "id"));
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard/produtos");
+}
+
+export async function deleteProduct(formData: FormData) {
+  await requireStoreUser();
+  const supabase = await createClient();
+  const productId = text(formData, "id");
+  if (!productId) throw new Error("ID do produto não informado.");
+
+  await supabase.from("product_variants").delete().eq("product_id", productId);
+
+  const { error } = await supabase.from("products").delete().eq("id", productId);
+  if (error) {
+    if (error.code === "23503" || error.message.includes("foreign key") || error.message.includes("violates foreign key")) {
+      throw new Error("Não é possível excluir este produto pois ele possui movimentações ou vendas vinculadas. Você pode arquivá-lo.");
+    }
+    throw new Error(error.message);
+  }
+  revalidatePath("/dashboard/produtos");
+}
+
 export async function createCustomer(formData: FormData) {
   const auth = await requireStoreUser();
   const supabase = await createClient();

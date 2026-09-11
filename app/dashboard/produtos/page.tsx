@@ -1,7 +1,8 @@
 import { PageHeader } from "@/components/page-header";
+import { ProductsTable } from "@/components/Products/ProductsTable/productsTable";
 import { SafeActionForm } from "@/components/safe-action-form";
 import { SchemmerProductForm } from "@/components/SchemmerProductForm/schemmerProductForm";
-import { adjustStock, archiveProduct, createProduct } from "@/lib/actions";
+import { adjustStock, createProduct } from "@/lib/actions";
 import { adjustSchemmerVariantStock } from "@/lib/schemmer-product-actions";
 import { requireStoreUser } from "@/lib/auth";
 import { getCompanyBrand } from "@/lib/company-brand";
@@ -13,28 +14,30 @@ export default async function ProductsPage() {
   const supabase = await createClient();
   const [{ data: company }, { data: products }, { data: variants }] = await Promise.all([
     supabase.from("companies").select("name,slug").eq("id", auth.companyId!).single(),
-    supabase.from("products").select("*").eq("is_active", true).order("name"),
-    supabase.from("product_variants").select("id,product_id,sku,color,model,stock_qty,min_stock,price_override,is_active").eq("is_active", true).order("created_at", { ascending: false }),
+    supabase.from("products").select("*").order("name"),
+    supabase.from("product_variants").select("id,product_id,sku,color,model,stock_qty,min_stock,price_override,is_active").order("created_at", { ascending: false }),
   ]);
 
   const brand = getCompanyBrand(company?.slug, company?.name);
   const isSchemmer = brand.key === "schemmer";
   const rows = products ?? [];
+  const activeProducts = rows.filter((product) => product.is_active);
   const categoryOptions = Array.from(
     new Set(rows.map((product) => (product.category ?? "").trim()).filter((category) => category.length > 0)),
   ).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  const activeVariants = variants ?? [];
+  const allVariants = variants ?? [];
+  const activeVariants = allVariants.filter((v) => v.is_active);
   const variantsFor = (productId: string) => activeVariants.filter((variant) => variant.product_id === productId);
-  const simpleProducts = rows.filter((product) => variantsFor(product.id).length === 0);
+  const simpleProducts = activeProducts.filter((product) => variantsFor(product.id).length === 0);
 
-  const lowStockProducts = rows.filter((product) => {
+  const lowStockProducts = activeProducts.filter((product) => {
     const productVariants = variantsFor(product.id);
     return productVariants.length
       ? productVariants.some((variant) => Number(variant.stock_qty) <= Number(variant.min_stock))
       : Number(product.stock_qty) <= Number(product.min_stock);
   });
 
-  const outOfStockProducts = rows.filter((product) => {
+  const outOfStockProducts = activeProducts.filter((product) => {
     const productVariants = variantsFor(product.id);
     return productVariants.length
       ? productVariants.some((variant) => Number(variant.stock_qty) <= 0)
@@ -108,26 +111,7 @@ export default async function ProductsPage() {
       </tbody></table></div></section>
     ) : null}
 
-    <section className="panel section-gap"><div className="panel-head"><h2>Produtos ativos</h2><span className={`badge ${lowStockProducts.length ? "warning" : ""}`}>{rows.length}</span></div><div className="table-wrap"><table><thead><tr><th>Produto</th><th>SKU</th><th>Categoria</th><th>Custo</th><th>Venda</th><th>Estoque</th><th>Status</th><th></th></tr></thead><tbody>
-      {rows.map((p) => {
-        const productVariants = variantsFor(p.id);
-        const variantStock = productVariants.reduce((total, variant) => total + Number(variant.stock_qty), 0);
-        const hasVariants = productVariants.length > 0;
-        const low = hasVariants ? productVariants.some((variant) => Number(variant.stock_qty) <= Number(variant.min_stock)) : Number(p.stock_qty) <= Number(p.min_stock);
-        const out = hasVariants ? productVariants.some((variant) => Number(variant.stock_qty) <= 0) : Number(p.stock_qty) <= 0;
-        const stockLabel = hasVariants ? variantStock : p.stock_qty;
-        return <tr key={p.id} className={low ? (out ? "low-stock-row critical" : "low-stock-row") : ""}>
-          <td><strong>{p.name}</strong>{hasVariants ? <small className="stock-row-note">{productVariants.length} variação(ões)</small> : low ? <small className="stock-row-note">Reposição necessária</small> : null}</td>
-          <td>{p.sku}</td>
-          <td>{p.category ?? "—"}</td>
-          <td>{brl(p.cost)}</td>
-          <td className="amount">{brl(p.price)}</td>
-          <td><strong className={low ? "stock-value-alert" : ""}>{stockLabel}</strong><small className="stock-minimum">{hasVariants ? "total das variações" : `mín. ${p.min_stock}`}</small></td>
-          <td><span className={`badge ${out ? "danger" : low ? "warning" : "success"}`}>{out ? (hasVariants ? "Variação sem estoque" : "Sem estoque") : low ? "Estoque mínimo" : "Normal"}</span></td>
-          <td><div className="toolbar"><a className="secondary" href={`/dashboard/produtos/${p.id}`}>Editar</a><form action={archiveProduct}><input type="hidden" name="id" value={p.id}/><button className="danger">Arquivar</button></form></div></td>
-        </tr>;
-      })}
-      {!rows.length ? <tr><td colSpan={8} className="empty">Nenhum produto cadastrado.</td></tr> : null}
-    </tbody></table></div></section>
+    <ProductsTable products={rows} variants={allVariants} />
   </>;
 }
+
