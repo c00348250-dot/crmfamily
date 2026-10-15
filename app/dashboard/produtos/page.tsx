@@ -20,6 +20,7 @@ export default async function ProductsPage() {
 
   const brand = getCompanyBrand(company?.slug, company?.name);
   const isSchemmer = brand.key === "schemmer";
+  const isSedux = brand.key === "sedux";
   const rows = products ?? [];
   const activeProducts = rows.filter((product) => product.is_active);
   const categoryOptions = Array.from(
@@ -66,6 +67,7 @@ export default async function ProductsPage() {
         {isSchemmer ? <SchemmerProductForm categories={categoryOptions} /> : (
           <SafeActionForm action={createProduct} className="form-grid" successMessage="Produto cadastrado com sucesso.">
             <label>SKU<input name="sku" required placeholder="Ex.: CEL-001" /></label>
+            {isSedux ? <label>Código do produto<input name="product_code" placeholder="Ex.: 1548" /></label> : null}
             <label>Código de barras<input name="barcode" placeholder="Opcional" /></label>
             <label className="wide">Nome<input name="name" required /></label>
             <label>Categoria<input name="category" list="product-category-options" placeholder="Selecione ou digite uma nova" autoComplete="off" /></label>
@@ -111,7 +113,7 @@ export default async function ProductsPage() {
       </tbody></table></div></section>
     ) : null}
 
-    <ProductsTable products={rows} variants={allVariants} />
+    <ProductsTable products={rows} variants={allVariants} showProductCode={isSedux} />
   </>;
 }
 
